@@ -28,6 +28,7 @@ r = requests.get(url, timeout=3)
 assert (r.status_code == 200), "Request failed! Status code: " + str(r.status_code)
 
 # parse JSON data into a list
+# TODO: account for timezone
 raw = r.json()
 data = [[0, 0] for i in range(7)]
 
@@ -37,7 +38,7 @@ for i in raw["list"]:
     data[dia][1] += i["main"]["humidity"]
 
 # find out the days with high probability of raining
-week_days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 rainy_days = []
 
 for i, j in enumerate(data):
@@ -46,6 +47,7 @@ for i, j in enumerate(data):
             rainy_days.append(week_days[i])
 
 # format and print the forecast
+# TODO: sort week days by next first
 forecast = "You should take an umbrella in these days:"
 n = len(rainy_days)
 
