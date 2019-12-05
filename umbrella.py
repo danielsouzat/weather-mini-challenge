@@ -9,36 +9,48 @@ umbrella when you leave home.
 import requests
 import time
 
+# script configuration
 api_key = ""
-cidade = "Ribeirão Preto"
-pais = "BR"
+city = "Ribeirão Preto"
+country = "BR"
 
-assert (api_key != ""), "API Key is empty"
+# check if API secret key was informed and ask for it input if not
+try:
+    assert (api_key != ""), "API key was not informed!"
+except AssertionError as e:
+    api_key = input("Input the API key: ")
 
-url = "https://api.openweathermap.org/data/2.5/forecast?q=%s,%s&mode=json&appid=%s" % (cidade, pais, api_key)
+#  request forecast data from the API
+url = "https://api.openweathermap.org/data/2.5/forecast?q=%s,%s&mode=json&appid=%s" % (city, country, api_key)
+r = requests.get(url, timeout=3)
 
-forecast = requests.get(url, timeout=3).json()
+# check if request was successful and raise exception if not
+assert (r.status_code == 200), "Request failed! Status code: " + str(r.status_code)
 
+# parse JSON data into a list
+raw = r.json()
 data = [[0, 0] for i in range(7)]
 
-for i in forecast["list"]:
+for i in raw["list"]:
     dia = time.gmtime(i["dt"]).tm_wday
     data[dia][0] += 1
     data[dia][1] += i["main"]["humidity"]
 
-semana = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-chuva = []
+# find out the days with high probability of raining
+week_days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+rainy_days = []
 
 for i, j in enumerate(data):
-    if j[0] > 1:
+    if j[0] > 5:  # ignore days with less than 5 data points
         if j[1]/j[0] > 70:
-            chuva.append(semana[i])
+            rainy_days.append(week_days[i])
 
-n = len(chuva)
-frase = "You should take an umbrella in these days:"
+# format and print the forecast
+forecast = "You should take an umbrella in these days:"
+n = len(rainy_days)
 
 for i in range(n-2):
-    frase += " " + chuva[i] + ","
-frase += " " + chuva[n-1] + "."
+    forecast += " " + rainy_days[i] + ","
+forecast += " " + rainy_days[n - 1] + "."
 
-print(frase)
+print(forecast)
