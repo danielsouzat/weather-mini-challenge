@@ -6,6 +6,7 @@ umbrella when you leave home.
 @email: danieldesouzatelles@gmail.com
 """
 
+import os
 import requests
 import time
 
@@ -14,13 +15,17 @@ api_key = ""
 city = "Ribeirão Preto"
 country = "BR"
 
+# set timezone to 'Brazil/East' so forecast is coherent with city localtime in any computer
+os.environ['TZ'] = 'Brazil/East'
+time.tzset()
+
 # check if API secret key was informed and ask for it input if not
 try:
     assert (api_key != ""), "API key was not informed!"
 except AssertionError as e:
     api_key = input("Input the API key: ")
 
-#  request forecast data from the API
+# request forecast data from the API
 url = "https://api.openweathermap.org/data/2.5/forecast?q=%s,%s&mode=json&appid=%s" % (city, country, api_key)
 r = requests.get(url, timeout=3)
 
@@ -28,12 +33,11 @@ r = requests.get(url, timeout=3)
 assert (r.status_code == 200), "Request failed! Status code: " + str(r.status_code)
 
 # parse JSON data into a list
-# TODO: account for timezone
 raw = r.json()
 data = [[0, 0] for i in range(7)]
 
 for i in raw["list"]:
-    dia = time.gmtime(i["dt"]).tm_wday
+    dia = time.localtime(i["dt"]).tm_wday
     data[dia][0] += 1
     data[dia][1] += i["main"]["humidity"]
 
@@ -42,7 +46,7 @@ week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
 rainy_days = []
 
 for i, j in enumerate(data):
-    if j[0] > 5:  # ignore days with less than 5 data points
+    if j[0] > 3:  # ignore days with less than 3 data points
         if j[1]/j[0] > 70:
             rainy_days.append(week_days[i])
 
