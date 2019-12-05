@@ -11,11 +11,11 @@ import requests
 import time
 
 # script configuration
-api_key = ""
+api_key = "7dba2d39c8ecde4bcb88baf0074dd099"
 city = "Ribeirão Preto"
 country = "BR"
 
-# set timezone to 'Brazil/East' so forecast is coherent with city localtime in any computer
+# set timezone to 'Brazil/East' so forecast is coherent with city local time in any computer
 os.environ['TZ'] = 'Brazil/East'
 time.tzset()
 
@@ -32,27 +32,36 @@ r = requests.get(url, timeout=3)
 # check if request was successful and raise exception if not
 assert (r.status_code == 200), "Request failed! Status code: " + str(r.status_code)
 
-# parse JSON data into a list
+# initialize list
+data = []
+week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+for i in week_days:
+    data.append([0, 0, i])
+
+# parse JSON data into list
 raw = r.json()
-data = [[0, 0] for i in range(7)]
 
 for i in raw["list"]:
     dia = time.localtime(i["dt"]).tm_wday
     data[dia][0] += 1
     data[dia][1] += i["main"]["humidity"]
 
+# rearrange list so today is first
+index = time.localtime(time.time()).tm_wday
+data = data[index:] + data[:index]
+
 # find out the days with high probability of raining
-week_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+# it will also give forecast for today if run before 09:00 AM
 rainy_days = []
 
 for i, j in enumerate(data):
     if j[0] > 3:  # ignore days with less than 3 data points
         if j[1]/j[0] > 70:
-            rainy_days.append(week_days[i])
+            rainy_days.append(j[2])
 
 # format and print the forecast
-# TODO: sort week days by next first
-forecast = "You should take an umbrella in these days:"
+forecast = "You should take an umbrella in these days:\033[1m\u001b[34m"  # colorize output with ANSI escape codes
 n = len(rainy_days)
 
 for i in range(n-2):
