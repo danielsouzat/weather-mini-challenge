@@ -11,7 +11,7 @@ import requests
 import time
 
 # script configuration
-api_key = "7dba2d39c8ecde4bcb88baf0074dd099"
+api_key = ""
 city = "Ribeirão Preto"
 country = "BR"
 
